@@ -1,34 +1,37 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 export default function Modal({ isOpen, onClose, title, children }) {
   useEffect(() => {
     if (!isOpen) return
-    // iOS Safari ignores overflow:hidden on body — fix with position:fixed
-    const scrollY = window.scrollY
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.width = '100%'
+    // Bloquear scroll sin position:fixed en body (que rompe la posición del modal)
+    document.documentElement.style.overscrollBehavior = 'none'
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.width = ''
-      window.scrollTo(0, scrollY)
+      document.documentElement.style.overscrollBehavior = ''
+      document.body.style.overflow = ''
     }
   }, [isOpen])
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center">
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}
+      onTouchMove={e => e.stopPropagation()}
+    >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
+        style={{ position: 'absolute', inset: 0, background: 'rgba(42,75,82,0.5)', backdropFilter: 'blur(4px)' }}
         onClick={onClose}
       />
-      {/* Sheet — crece con el contenido, sin espacio vacío scrolleable */}
-      <div className="relative w-full max-w-lg bg-cream rounded-b-3xl shadow-modal flex flex-col slide-down">
+      {/* Sheet */}
+      <div
+        className="relative w-full max-w-lg bg-cream rounded-b-3xl shadow-modal flex flex-col slide-down"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-cream-border shrink-0">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-cream-border shrink-0">
           <h2 className="font-display text-xl text-ink font-semibold">{title}</h2>
           <button
             onClick={onClose}
@@ -37,11 +40,12 @@ export default function Modal({ isOpen, onClose, title, children }) {
             ✕
           </button>
         </div>
-        {/* Contenido — sin flex-1: no hay espacio vacío; overflow solo si hace falta */}
-        <div className="p-5" style={{ overflowY: 'auto', maxHeight: 'calc(85dvh - 65px)', overscrollBehavior: 'contain' }}>
+        {/* Contenido — sin flex-1, no hay espacio vacío scrolleable */}
+        <div className="p-5" style={{ overflowY: 'auto', maxHeight: 'calc(85dvh - 65px)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
