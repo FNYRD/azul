@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:8000/api'
+const BASE = import.meta.env.DEV ? 'http://localhost:8000/api' : '/api'
 
 async function req(method, path, body) {
   const opts = {
