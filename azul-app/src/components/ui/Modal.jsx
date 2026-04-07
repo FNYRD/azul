@@ -57,18 +57,8 @@ export default function Modal({ isOpen, onClose, title, children }) {
       {/* Sheet */}
       <div
         className="relative w-full max-w-lg bg-cream flex flex-col slide-down"
-        style={{ paddingTop: 'env(safe-area-inset-top)', borderRadius: '0 0 24px 24px' }}
+        style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))', borderRadius: '0 0 24px 24px' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-cream-border shrink-0">
-          <h2 className="font-display text-xl text-ink font-semibold">{title}</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-cream-warm transition-colors text-ink-light font-sans text-lg leading-none"
-          >
-            ✕
-          </button>
-        </div>
         {/* Contenido — ocupa el espacio restante */}
         <div
           className="p-5"
