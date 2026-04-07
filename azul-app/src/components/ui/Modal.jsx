@@ -25,16 +25,10 @@ export default function Modal({ isOpen, onClose, title, children }) {
         className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      {/* Sheet */}
-      <div
-        className="relative w-full max-w-lg bg-cream rounded-b-3xl shadow-modal flex flex-col slide-down"
-        style={{ maxHeight: '85dvh' }}
-      >
+      {/* Sheet — crece con el contenido, sin espacio vacío scrolleable */}
+      <div className="relative w-full max-w-lg bg-cream rounded-b-3xl shadow-modal flex flex-col slide-down">
         {/* Header */}
-        <div
-          className="flex items-center justify-between px-5 py-4 border-b border-cream-border shrink-0"
-          style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
-        >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-cream-border shrink-0">
           <h2 className="font-display text-xl text-ink font-semibold">{title}</h2>
           <button
             onClick={onClose}
@@ -43,8 +37,8 @@ export default function Modal({ isOpen, onClose, title, children }) {
             ✕
           </button>
         </div>
-        {/* Content — overscroll:none evita rubber-band en iOS */}
-        <div className="overflow-y-auto p-5 flex-1" style={{ overscrollBehavior: 'none' }}>
+        {/* Contenido — sin flex-1: no hay espacio vacío; overflow solo si hace falta */}
+        <div className="p-5" style={{ overflowY: 'auto', maxHeight: 'calc(85dvh - 65px)', overscrollBehavior: 'contain' }}>
           {children}
         </div>
       </div>
