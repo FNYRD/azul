@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html {
+    font-family: 'Crimson Text', serif;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  body {
+    background-color: #5DA8B5;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-width: 0;         /* prevents flex children from overflowing */
+  }
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-cream rounded-2xl shadow-card transition-all duration-200;
+  }
+  /* Cards clickeables flotan al hacer hover */
+  .card.cursor-pointer:hover {
+    transform: translateY(-3px);
+    @apply shadow-card-hover;
+  }
+  .card.cursor-pointer:active {
+    transform: translateY(-1px);
+  }
+  .btn-primary {
+    @apply bg-teal-dark text-cream rounded-xl px-5 py-3 font-sans font-medium text-sm
+           shadow-md active:scale-95 transition-all duration-150 select-none
+           hover:bg-teal-deeper hover:shadow-lg;
+  }
+  .btn-secondary {
+    @apply bg-cream text-teal-dark border border-teal-dark/20 rounded-xl px-5 py-3
+           font-sans font-medium text-sm shadow-sm active:scale-95 transition-all duration-150 select-none
+           hover:bg-teal-pale;
+  }
+  .btn-ghost {
+    @apply text-cream/90 rounded-xl px-3 py-2 font-sans font-medium text-sm
+           active:scale-95 transition-all duration-150 select-none
+           hover:bg-white/10;
+  }
+  .btn-danger {
+    @apply bg-red-500/10 text-red-600 border border-red-200 rounded-xl px-5 py-3
+           font-sans font-medium text-sm active:scale-95 transition-all duration-150 select-none
+           hover:bg-red-500/20;
+  }
+  .input {
+    @apply w-full bg-cream border border-cream-border rounded-xl px-4 py-3
+           text-ink font-body text-base
+           focus:outline-none focus:ring-2 focus:ring-teal-dark/30
+           placeholder:text-ink-muted;
+  }
+  .textarea {
+    @apply w-full bg-cream border border-cream-border rounded-xl px-4 py-3
+           text-ink font-body text-base resize-none
+           focus:outline-none focus:ring-2 focus:ring-teal-dark/30
+           placeholder:text-ink-muted leading-relaxed;
+  }
+  .label {
+    @apply text-ink-light font-sans text-xs font-medium uppercase tracking-wider mb-1 block;
+  }
+  .tab-btn {
+    @apply flex-1 py-2.5 text-xs font-sans font-medium rounded-xl transition-all duration-150 select-none overflow-hidden;
+  }
+  .tab-active {
+    @apply bg-teal-dark text-cream shadow-sm;
+  }
+  .tab-inactive {
+    @apply text-ink-light hover:bg-teal-pale;
+  }
+}
+
+/* Smooth bottom-sheet animation */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.slide-up {
+  animation: slideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
