@@ -17,10 +17,9 @@ export default function Modal({ isOpen, onClose, title, children }) {
 
   return createPortal(
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}
-      onTouchMove={e => e.stopPropagation()}
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', touchAction: 'none' }}
     >
-      {/* Backdrop */}
+      {/* Backdrop — touch-action:none heredado, bloquea scroll en zona oscura */}
       <div
         style={{ position: 'absolute', inset: 0, background: 'rgba(42,75,82,0.5)', backdropFilter: 'blur(4px)' }}
         onClick={onClose}
@@ -40,8 +39,8 @@ export default function Modal({ isOpen, onClose, title, children }) {
             ✕
           </button>
         </div>
-        {/* Contenido — sin flex-1, no hay espacio vacío scrolleable */}
-        <div className="p-5" style={{ overflowY: 'auto', maxHeight: 'calc(85dvh - 65px)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
+        {/* Contenido — pan-y sobreescribe touch-action:none del padre para permitir scroll interno */}
+        <div className="p-5" style={{ overflowY: 'auto', maxHeight: 'calc(85dvh - 65px)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
           {children}
         </div>
       </div>
