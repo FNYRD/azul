@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({ isOpen, onClose, children }) {
   // Seguir el visual viewport para sobrevivir al teclado en iOS Safari
   const [vv, setVv] = useState(() => ({
     top: 0, left: 0,

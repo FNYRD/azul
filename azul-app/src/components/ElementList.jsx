@@ -242,7 +242,7 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
         const key = elementType === 'character' ? 'characters' : elementType === 'place' ? 'places' : elementType === 'thing' ? 'things' : 'words'
         const freshEl = book[key]?.find(e => e.id === modal.el.id) || modal.el
         return (
-          <Modal isOpen onClose={() => setModal(null)} title={freshEl[config.nameKey]}>
+          <Modal isOpen onClose={() => setModal(null)}>
             <div className="space-y-4">
               {elementType === 'character' && freshEl.age && (
                 <div>
@@ -337,7 +337,7 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
       )}
 
       {/* Append text modal */}
-      <Modal isOpen={!!appendModal} onClose={() => setAppend(null)} title="Add text to description">
+      <Modal isOpen={!!appendModal} onClose={() => setAppend(null)}>
         <form onSubmit={submitAppend} className="space-y-4">
           <MentionTextarea
             rows={6}
@@ -493,7 +493,7 @@ function RelatedModal({ el, elementType, book, authorId, navigate, onClose }) {
   const list = tab === 'outgoing' ? outgoing : incoming
 
   return (
-    <Modal isOpen onClose={onClose} title={`Relacionados · ${el[config.nameKey]}`}>
+    <Modal isOpen onClose={onClose}>
       <div className="flex border-b border-cream-border mb-4 -mt-1">
         <button
           onClick={() => setTab('outgoing')}

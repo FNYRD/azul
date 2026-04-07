@@ -154,7 +154,6 @@ export default function LibraryView({ navigate }) {
       <Modal
         isOpen={!!modal}
         onClose={() => setModal(null)}
-        title={modal === 'add' ? 'New author' : 'Edit author'}
       >
         <form onSubmit={submit} className="space-y-4">
           <div>

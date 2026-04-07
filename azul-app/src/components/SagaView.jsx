@@ -79,8 +79,8 @@ export default function SagaView({ sagaId, authorId, navigate }) {
             <h2 className="font-display text-ink font-bold text-2xl">{saga.name}</h2>
           </div>
           <div className="flex gap-1 shrink-0">
-            <IconBtn onClick={() => { setForm({ name: saga.name, description: saga.description }); setModal('edit-saga') }} title="Edit saga"><EditIcon /></IconBtn>
-            <IconBtn onClick={() => setAppend(true)} title="Add notes"><PlusNoteIcon /></IconBtn>
+            <IconBtn onClick={() => { setForm({ name: saga.name, description: saga.description }); setModal('edit-saga') }}><EditIcon /></IconBtn>
+            <IconBtn onClick={() => setAppend(true)}><PlusNoteIcon /></IconBtn>
           </div>
         </div>
         {saga.description
@@ -130,7 +130,7 @@ export default function SagaView({ sagaId, authorId, navigate }) {
       </div>
 
       {/* Edit saga */}
-      <Modal isOpen={modal === 'edit-saga'} onClose={() => setModal(null)} title="Edit saga">
+      <Modal isOpen={modal === 'edit-saga'} onClose={() => setModal(null)}>
         <form onSubmit={async e => { e.preventDefault(); await dispatch({ type: 'UPDATE_SAGA', authorId, sagaId, updates: { name: form.name, description: form.description } }); setModal(null); refresh() }} className="space-y-4">
           <div><label className="label">Name</label><input className="input" value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
           <div><label className="label">Description</label><MentionTextarea rows={4} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} state={state} /></div>
@@ -142,7 +142,7 @@ export default function SagaView({ sagaId, authorId, navigate }) {
       </Modal>
 
       {/* Append */}
-      <Modal isOpen={appendModal} onClose={() => setAppend(false)} title="Add notes">
+      <Modal isOpen={appendModal} onClose={() => setAppend(false)}>
         <form onSubmit={submitAppend} className="space-y-4">
           <MentionTextarea rows={5} autoFocus value={appendText} onChange={e => setAppendTx(e.target.value)} placeholder="Additional notes…" state={state} />
           <div className="flex gap-3 pt-2">
@@ -153,7 +153,7 @@ export default function SagaView({ sagaId, authorId, navigate }) {
       </Modal>
 
       {/* Add/Edit book */}
-      <Modal isOpen={modal === 'add-book' || modal?.type === 'edit-book'} onClose={() => setModal(null)} title={modal === 'add-book' ? 'New book' : 'Edit book'}>
+      <Modal isOpen={modal === 'add-book' || modal?.type === 'edit-book'} onClose={() => setModal(null)}>
         <form onSubmit={submitBook} className="space-y-4">
           <div><label className="label">Title *</label><input className="input" autoFocus value={form.title || ''} onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setFormError('') }} placeholder="Book title" />{formError && <p className="text-red-500 text-xs mt-1 font-sans">{formError}</p>}</div>
           <div><label className="label">Description</label><MentionTextarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Synopsis or notes…" state={state} /></div>

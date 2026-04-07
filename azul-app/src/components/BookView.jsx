@@ -75,7 +75,7 @@ export default function BookView({ bookId, authorId, sagaId, initialTab, navigat
             <h2 className="font-display text-ink font-bold text-2xl leading-tight">{book.title}</h2>
           </div>
           <div className="flex gap-1 shrink-0">
-            <IconBtn onClick={() => { setForm({ title: book.title, description: book.description, startDate: book.startDate || '', endDate: book.endDate || '' }); setModal('edit') }} title="Edit book"><EditIcon /></IconBtn>
+            <IconBtn onClick={() => { setForm({ title: book.title, description: book.description, startDate: book.startDate || '', endDate: book.endDate || '' }); setModal('edit') }}><EditIcon /></IconBtn>
             <IconBtn onClick={() => setAppend(true)} title="Add notes"><PlusNoteIcon /></IconBtn>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function BookView({ bookId, authorId, sagaId, initialTab, navigat
       />
 
       {/* Edit book */}
-      <Modal isOpen={modal === 'edit'} onClose={() => setModal(null)} title="Edit book">
+      <Modal isOpen={modal === 'edit'} onClose={() => setModal(null)}>
         <form onSubmit={async e => { e.preventDefault(); await dispatch({ type: 'UPDATE_BOOK', authorId, bookId, updates: { title: form.title, description: form.description, startDate: form.startDate || null, endDate: form.endDate || null } }); setModal(null); refresh() }} className="space-y-4">
           <div><label className="label">Title</label><input className="input" value={form.title || ''} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
           <div><label className="label">Description / Synopsis</label><MentionTextarea rows={4} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} state={state} scope={{ bookId, authorId }} /></div>
@@ -144,7 +144,7 @@ export default function BookView({ bookId, authorId, sagaId, initialTab, navigat
       </Modal>
 
       {/* Append */}
-      <Modal isOpen={appendModal} onClose={() => setAppend(false)} title="Add notes to book">
+      <Modal isOpen={appendModal} onClose={() => setAppend(false)}>
         <form onSubmit={submitAppend} className="space-y-4">
           <MentionTextarea rows={5} autoFocus value={appendText} onChange={e => setAppendTx(e.target.value)} placeholder="Additional notes… Use @name to reference characters, places or objects" state={state} scope={{ bookId, authorId }} />
           <div className="flex gap-3 pt-2">

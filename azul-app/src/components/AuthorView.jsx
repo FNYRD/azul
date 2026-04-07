@@ -101,8 +101,8 @@ export default function AuthorView({ authorId, navigate }) {
         <div className="flex items-start justify-between gap-3 mb-3">
           <h2 className="font-display text-ink font-bold text-2xl leading-tight">{author.name}</h2>
           <div className="flex gap-1 shrink-0">
-            <IconBtn onClick={() => { setForm({ name: author.name, description: author.description }); setModal('edit-author') }} title="Edit author"><EditIcon /></IconBtn>
-            <IconBtn onClick={() => setAppendModal(true)} title="Add notes"><PlusNoteIcon /></IconBtn>
+            <IconBtn onClick={() => { setForm({ name: author.name, description: author.description }); setModal('edit-author') }}><EditIcon /></IconBtn>
+            <IconBtn onClick={() => setAppendModal(true)}><PlusNoteIcon /></IconBtn>
           </div>
         </div>
         {author.description
@@ -167,7 +167,7 @@ export default function AuthorView({ authorId, navigate }) {
       </Section>
 
       {/* Edit author */}
-      <Modal isOpen={modal === 'edit-author'} onClose={() => setModal(null)} title="Edit author">
+      <Modal isOpen={modal === 'edit-author'} onClose={() => setModal(null)}>
         <form onSubmit={async e => { e.preventDefault(); await dispatch({ type: 'UPDATE_AUTHOR', id: authorId, updates: { name: form.name, description: form.description } }); setModal(null); refresh() }} className="space-y-4">
           <div><label className="label">Name</label><input className="input" value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
           <div><label className="label">Description</label><MentionTextarea rows={4} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} state={state} /></div>
@@ -176,7 +176,7 @@ export default function AuthorView({ authorId, navigate }) {
       </Modal>
 
       {/* Append */}
-      <Modal isOpen={appendModal} onClose={() => setAppendModal(false)} title="Add notes">
+      <Modal isOpen={appendModal} onClose={() => setAppendModal(false)}>
         <form onSubmit={submitAppend} className="space-y-4">
           <MentionTextarea rows={5} autoFocus value={appendText} onChange={e => setAppendText(e.target.value)} placeholder="Write additional notes… Use @name to reference characters, places or objects" state={state} />
           <FormActions onCancel={() => setAppendModal(false)} submitLabel="Add" />
@@ -184,7 +184,7 @@ export default function AuthorView({ authorId, navigate }) {
       </Modal>
 
       {/* Add/Edit saga */}
-      <Modal isOpen={modal === 'add-saga' || modal?.type === 'edit-saga'} onClose={() => setModal(null)} title={modal === 'add-saga' ? 'New saga' : 'Edit saga'}>
+      <Modal isOpen={modal === 'add-saga' || modal?.type === 'edit-saga'} onClose={() => setModal(null)}>
         <form onSubmit={submitSaga} className="space-y-4">
           <div><label className="label">Name *</label><input className="input" autoFocus value={form.name || ''} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setFormError('') }} placeholder="Saga name" />{formError && <p className="text-red-500 text-xs mt-1 font-sans">{formError}</p>}</div>
           <div><label className="label">Description</label><MentionTextarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Saga description…" state={state} /></div>
@@ -193,7 +193,7 @@ export default function AuthorView({ authorId, navigate }) {
       </Modal>
 
       {/* Add/Edit book */}
-      <Modal isOpen={modal === 'add-book' || modal?.type === 'edit-book'} onClose={() => setModal(null)} title={modal === 'add-book' ? 'New book' : 'Edit book'}>
+      <Modal isOpen={modal === 'add-book' || modal?.type === 'edit-book'} onClose={() => setModal(null)}>
         <form onSubmit={submitBook} className="space-y-4">
           <div><label className="label">Title *</label><input className="input" autoFocus value={form.title || ''} onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setFormError('') }} placeholder="Book title" />{formError && <p className="text-red-500 text-xs mt-1 font-sans">{formError}</p>}</div>
           <div><label className="label">Description / Synopsis</label><MentionTextarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Synopsis or notes…" state={state} /></div>
