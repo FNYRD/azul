@@ -26,14 +26,13 @@ export default function Modal({ isOpen, onClose, title, children }) {
     }
 
     update()
+    // Solo resize (teclado abre/cierra) — NO scroll, para que el header no se mueva
     window.visualViewport?.addEventListener('resize', update)
-    window.visualViewport?.addEventListener('scroll', update)
 
     return () => {
       document.documentElement.style.overscrollBehavior = ''
       document.body.style.overflow = ''
       window.visualViewport?.removeEventListener('resize', update)
-      window.visualViewport?.removeEventListener('scroll', update)
     }
   }, [isOpen])
 
@@ -52,13 +51,13 @@ export default function Modal({ isOpen, onClose, title, children }) {
     >
       {/* Backdrop */}
       <div
-        style={{ position: 'absolute', inset: 0, background: 'rgba(42,75,82,0.5)', backdropFilter: 'blur(4px)' }}
+        style={{ position: 'absolute', inset: 0, background: 'rgba(42,75,82,0.5)', backdropFilter: 'blur(4px)', borderRadius: '0 0 24px 24px' }}
         onClick={onClose}
       />
-      {/* Sheet — ocupa toda la altura del visual viewport, sin gap */}
+      {/* Sheet */}
       <div
         className="relative w-full max-w-lg bg-cream flex flex-col slide-down"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        style={{ paddingTop: 'env(safe-area-inset-top)', borderRadius: '0 0 24px 24px' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-cream-border shrink-0">
