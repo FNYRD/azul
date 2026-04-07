@@ -39,8 +39,6 @@ export default function Modal({ isOpen, onClose, title, children }) {
 
   if (!isOpen) return null
 
-  const contentMaxH = Math.floor(vv.height * 0.85) - 57  // 57 ≈ header
-
   return createPortal(
     <div
       style={{
@@ -48,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
         top: vv.top, left: vv.left,
         width: vv.width, height: vv.height,
         zIndex: 9999,
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        display: 'flex', alignItems: 'stretch', justifyContent: 'center',
         touchAction: 'none',
       }}
     >
@@ -57,9 +55,9 @@ export default function Modal({ isOpen, onClose, title, children }) {
         style={{ position: 'absolute', inset: 0, background: 'rgba(42,75,82,0.5)', backdropFilter: 'blur(4px)' }}
         onClick={onClose}
       />
-      {/* Sheet */}
+      {/* Sheet — ocupa toda la altura del visual viewport, sin gap */}
       <div
-        className="relative w-full max-w-lg bg-cream rounded-b-3xl shadow-modal flex flex-col slide-down"
+        className="relative w-full max-w-lg bg-cream flex flex-col slide-down"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         {/* Header */}
@@ -72,10 +70,10 @@ export default function Modal({ isOpen, onClose, title, children }) {
             ✕
           </button>
         </div>
-        {/* Contenido */}
+        {/* Contenido — ocupa el espacio restante */}
         <div
           className="p-5"
-          style={{ overflowY: 'auto', maxHeight: contentMaxH, overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+          style={{ overflowY: 'auto', flex: 1, minHeight: 0, overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
         >
           {children}
         </div>
