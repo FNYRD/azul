@@ -13,20 +13,22 @@ export default function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
         onClick={onClose}
       />
       {/* Sheet */}
-      <div className="relative w-full max-w-lg bg-cream rounded-t-3xl shadow-modal max-h-[92dvh] flex flex-col slide-up" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-cream-border" />
-        </div>
+      <div
+        className="relative w-full max-w-lg bg-cream rounded-b-3xl shadow-modal flex flex-col slide-down"
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+          maxHeight: '85dvh',
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-cream-border shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-cream-border shrink-0">
           <h2 className="font-display text-xl text-ink font-semibold">{title}</h2>
           <button
             onClick={onClose}
