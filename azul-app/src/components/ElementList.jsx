@@ -59,7 +59,7 @@ const CONFIGS = {
   },
 }
 
-export default function ElementList({ elementType, book, authorId, navigate, onRefresh }) {
+export default function ElementList({ elementType, book, navigate, onRefresh }) {
   const { dispatch, state } = useApp()
   const config = CONFIGS[elementType]
   const elements = book[elementType === 'character' ? 'characters' : elementType === 'place' ? 'places' : elementType === 'thing' ? 'things' : 'words'] || []
@@ -105,9 +105,9 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
     const data = {}
     config.fields.forEach(f => { data[f.key] = (form[f.key] || '').trim() })
     if (modal === 'add') {
-      await dispatch({ type: 'ADD_ELEMENT', authorId, bookId: book.id, elementType, data })
+      await dispatch({ type: 'ADD_ELEMENT', bookId: book.id, elementType, data })
     } else {
-      await dispatch({ type: 'UPDATE_ELEMENT', authorId, bookId: book.id, elementType, elementId: modal.el.id, updates: data })
+      await dispatch({ type: 'UPDATE_ELEMENT', bookId: book.id, elementType, elementId: modal.el.id, updates: data })
     }
     setModal(null)
     onRefresh?.()
@@ -117,7 +117,7 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
     setConfirmDialog({
       message: `Delete this ${config.label.toLowerCase()}?`,
       onConfirm: async () => {
-        await dispatch({ type: 'DELETE_ELEMENT', authorId, bookId: book.id, elementType, elementId: id })
+        await dispatch({ type: 'DELETE_ELEMENT', bookId: book.id, elementType, elementId: id })
         if (modal?.el?.id === id) setModal(null)
         onRefresh?.()
       },
@@ -127,7 +127,7 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
   async function submitAppend(e) {
     e.preventDefault()
     if (!appendText.trim()) return
-    await dispatch({ type: 'APPEND_TO_DESCRIPTION', target: 'element', authorId, bookId: book.id, elementType, elementId: appendModal, text: appendText.trim() })
+    await dispatch({ type: 'APPEND_TO_DESCRIPTION', target: 'element', bookId: book.id, elementType, elementId: appendModal, text: appendText.trim() })
     setAppendTx('')
     setAppend(null)
     setModal(null)
@@ -258,7 +258,7 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
                     state={state}
                     onMentionClick={entity => {
                       setModal(null)
-                      navigate(entityNav(entity, book.id, authorId))
+                      navigate(entityNav(entity, book.id))
                     }}
                   />
                 </div>
@@ -298,7 +298,7 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
                   onChange={e => setForm(fv => ({ ...fv, [f.key]: e.target.value }))}
                   placeholder={f.placeholder}
                   state={state}
-                  scope={{ bookId: book.id, authorId }}
+                  scope={{ bookId: book.id }}
                 />
               ) : (
                 <input
@@ -330,7 +330,6 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
           el={relatedModal}
           elementType={elementType}
           book={book}
-          authorId={authorId}
           navigate={navigate}
           onClose={() => setRelatedModal(null)}
         />
@@ -346,7 +345,7 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
             onChange={e => setAppendTx(e.target.value)}
             placeholder="Additional text… Use @name to reference other elements"
             state={state}
-            scope={{ bookId: book.id, authorId }}
+            scope={{ bookId: book.id }}
           />
           <p className="text-xs font-sans text-ink-muted">The text will be appended to the existing description.</p>
           <div className="flex gap-3 pt-2">
@@ -367,15 +366,13 @@ export default function ElementList({ elementType, book, authorId, navigate, onR
 }
 
 /** Build navigate payload for any entity type, with fallback to current book context */
-function entityNav(entity, fallbackBookId, fallbackAuthorId) {
+function entityNav(entity, fallbackBookId) {
   switch (entity.type) {
-    case 'author': return { view: 'author', authorId: entity.authorId ?? entity.id }
-    case 'saga':   return { view: 'saga',   sagaId: entity.id, authorId: entity.authorId }
-    case 'book':   return { view: 'book',   bookId: entity.id, authorId: entity.authorId }
-    default:       return {
+    case 'saga': return { view: 'saga', sagaId: entity.id }
+    case 'book': return { view: 'book', bookId: entity.id }
+    default:     return {
       view: 'book',
-      bookId:      entity.bookId   ?? fallbackBookId,
-      authorId:    entity.authorId ?? fallbackAuthorId,
+      bookId:      entity.bookId ?? fallbackBookId,
       tab:         entity.type + 's',
       highlightId: entity.id,
     }
@@ -439,7 +436,7 @@ function scanMentions(text, entityMap) {
   return results
 }
 
-function RelatedModal({ el, elementType, book, authorId, navigate, onClose }) {
+function RelatedModal({ el, elementType, book, navigate, onClose }) {
   const [tab, setTab] = useState('outgoing')
   const config = CONFIGS[elementType]
   const myName = (el[config.nameKey] || '').toLowerCase()
@@ -517,7 +514,7 @@ function RelatedModal({ el, elementType, book, authorId, navigate, onClose }) {
               key={entity.id}
               onClick={() => {
                 onClose()
-                navigate({ view: 'book', bookId: book.id, authorId, tab: entity.type + 's', highlightId: entity.id })
+                navigate({ view: 'book', bookId: book.id, tab: entity.type + 's', highlightId: entity.id })
               }}
               className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2 transition-opacity hover:opacity-75 ${typeColors[entity.type]}`}
             >

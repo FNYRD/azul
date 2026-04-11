@@ -48,7 +48,6 @@ export default function AppHeader({ nav, onBack, onSearch }) {
 function NavTitle({ nav }) {
   const labels = {
     library: 'Library',
-    author:  'Author',
     saga:    'Saga',
     book:    'Book',
     search:  'Search',

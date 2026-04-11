@@ -1,15 +1,14 @@
-import { useState } from 'react'
-import { AppProvider } from './context/AppContext'
-import LandingPage   from './components/LandingPage'
-import LibraryView   from './components/LibraryView'
-import AuthorView    from './components/AuthorView'
-import SagaView      from './components/SagaView'
-import BookView      from './components/BookView'
-import SearchView    from './components/SearchView'
-import AppHeader     from './components/ui/AppHeader'
+import { useState } from "react"
+import { AppProvider } from "./context/AppContext"
+import LandingPage from "./components/LandingPage"
+import LibraryView from "./components/LibraryView"
+import SagaView    from "./components/SagaView"
+import BookView    from "./components/BookView"
+import SearchView  from "./components/SearchView"
+import AppHeader   from "./components/ui/AppHeader"
 
 function AppContent() {
-  const [nav, setNav] = useState({ view: 'landing' })
+  const [nav, setNav] = useState({ view: "landing" })
   const [searchKey, setSearchKey] = useState(0)
 
   function navigate(newNav) {
@@ -19,31 +18,29 @@ function AppContent() {
 
   function goBack() {
     switch (nav.view) {
-      case 'library':  navigate({ view: 'landing' }); break
-      case 'author':   navigate({ view: 'library' }); break
-      case 'saga':     navigate({ view: 'author', authorId: nav.authorId }); break
-      case 'book':
-        if (nav.sagaId) navigate({ view: 'saga', sagaId: nav.sagaId, authorId: nav.authorId })
-        else            navigate({ view: 'author', authorId: nav.authorId })
+      case "library": navigate({ view: "landing" }); break
+      case "saga":    navigate({ view: "library" }); break
+      case "book":
+        if (nav.sagaId) navigate({ view: "saga", sagaId: nav.sagaId })
+        else            navigate({ view: "library" })
         break
-      case 'search':   navigate({ view: 'library' }); break
-      default:         navigate({ view: 'library' })
+      case "search":  navigate({ view: "library" }); break
+      default:        navigate({ view: "library" })
     }
   }
 
-  if (nav.view === 'landing') {
-    return <LandingPage onEnter={() => navigate({ view: 'library' })} />
+  if (nav.view === "landing") {
+    return <LandingPage onEnter={() => navigate({ view: "library" })} />
   }
 
   return (
-    <div className="min-h-screen min-h-dvh w-full overflow-x-hidden" style={{ background: 'linear-gradient(180deg, #5DA8B5 0%, #4A8E99 100%)' }}>
-      <AppHeader nav={nav} onBack={goBack} onSearch={() => { setSearchKey(k => k + 1); navigate({ view: 'search' }) }} />
-      <main className="pt-16 pb-12 w-full max-w-lg mx-auto px-4" style={{ paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))', paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}>
-        {nav.view === 'library' && <LibraryView navigate={navigate} />}
-        {nav.view === 'author'  && <AuthorView  authorId={nav.authorId} navigate={navigate} />}
-        {nav.view === 'saga'    && <SagaView    sagaId={nav.sagaId} authorId={nav.authorId} navigate={navigate} />}
-        {nav.view === 'book'    && <BookView    bookId={nav.bookId} authorId={nav.authorId} sagaId={nav.sagaId} initialTab={nav.tab} navigate={navigate} />}
-        {nav.view === 'search'  && <SearchView  key={searchKey} navigate={navigate} />}
+    <div className="min-h-screen min-h-dvh w-full overflow-x-hidden" style={{ background: "linear-gradient(180deg, #5DA8B5 0%, #4A8E99 100%)" }}>
+      <AppHeader nav={nav} onBack={goBack} onSearch={() => { setSearchKey(k => k + 1); navigate({ view: "search" }) }} />
+      <main className="pt-16 pb-12 w-full max-w-lg mx-auto px-4" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))", paddingBottom: "max(3rem, env(safe-area-inset-bottom))" }}>
+        {nav.view === "library" && <LibraryView navigate={navigate} />}
+        {nav.view === "saga"    && <SagaView    sagaId={nav.sagaId} navigate={navigate} />}
+        {nav.view === "book"    && <BookView    bookId={nav.bookId} sagaId={nav.sagaId} initialTab={nav.tab} navigate={navigate} />}
+        {nav.view === "search"  && <SearchView  key={searchKey} navigate={navigate} />}
       </main>
     </div>
   )
