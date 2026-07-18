@@ -1,0 +1,15 @@
+# Dependencias / entornos virtuales (no versionar cambios nuevos)
+node_modules/
+.venv/
+
+# Python compilado / cachés
+__pycache__/
+*.pyc
+*.pyo
+
+# Backups temporales
+*.bak
+*.bak.*
+
+# OS
+.DS_Store

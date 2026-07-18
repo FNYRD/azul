@@ -1,0 +1,13 @@
+{
+  "name": "Azul",
+  "short_name": "Azul",
+  "description": "Tu diario de lectura",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#5DA8B5",
+  "theme_color": "#5DA8B5",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
