@@ -316,3 +316,40 @@ class SearchView(APIView):
             add_elements(book.words.all(),      "word",      "Word",      "word")
 
         return Response(hits)
+
+
+# ── Backup trigger (lanza el backup on-demand si la app lo detecta obsoleto) ──
+import json as _json, os as _os, subprocess as _subprocess
+from datetime import datetime as _datetime, timezone as _timezone
+
+_BACKUP_SCRIPT = "/usr/local/bin/azul-backup.sh"
+_BACKUP_STATUS = "/var/lib/azul/backup-status.json"
+_BACKUP_COOLDOWN = 600  # s: no relanzar si hubo un intento hace menos de esto
+
+
+class BackupTriggerView(APIView):
+    def post(self, request):
+        # Cooldown: evita relanzar el backup en cada carga de la app.
+        try:
+            with open(_BACKUP_STATUS) as f:
+                st = _json.load(f)
+            last = st.get("lastAttempt")
+            if last:
+                dt = _datetime.fromisoformat(last.replace("Z", "+00:00"))
+                age = (_datetime.now(_timezone.utc) - dt).total_seconds()
+                if age < _BACKUP_COOLDOWN:
+                    return Response({"triggered": False, "reason": "recent", "ageSeconds": int(age)})
+        except (FileNotFoundError, ValueError, KeyError):
+            pass
+        try:
+            _subprocess.Popen(
+                [_BACKUP_SCRIPT],
+                stdout=_subprocess.DEVNULL,
+                stderr=_subprocess.DEVNULL,
+                start_new_session=True,
+                env={**_os.environ, "HOME": "/root"},
+            )
+        except Exception as e:  # noqa: BLE001
+            return Response({"triggered": False, "error": str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"triggered": True})

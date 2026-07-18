@@ -1,89 +1,104 @@
 # CLAUDE.md
 
+## ⚠️ Persistence / Deploy
+`/home/github/FNYRD/main_azul` is a **deploy checkout (GitHub Actions)**. A deploy `git reset`s to GitHub `main`, **reverting any tracked file hand-edited on the server** (source, `dist/`, docs). To make a change stick it must be **committed and pushed to `main`** (via the SSH deploy key). See `context.md` → "Persistencia / Deploy".
+
 ## What this app is
 
-**Azul** is a personal reading-journal app. Users register authors, sagas, and books, then annotate each book with characters, places, objects, and vocabulary. Everything is cross-referenced via `@mentions`. No backend — all data lives in `localStorage` under `azul-app-v1`.
+**Azul** is a personal reading-journal app, **mobile-first (used on iPhone)**. Users register sagas and books, then annotate each book with characters, places, objects, and vocabulary. Everything is cross-referenced via `@mentions`.
+
+**Backend:** data lives in a **Django + DRF + Gunicorn** API (SQLite), served under `/api/` (see `context.md` for endpoints and deploy). The frontend talks to it via `src/api.js` + `dispatch()` in `AppContext.jsx`. (There is no localStorage store anymore.)
 
 ```bash
 npm run dev    # dev server (usually :5174 if :5173 is taken)
-npm run build  # verify no compile errors before finishing
+npm run build  # verify no compile errors before finishing; regenerates dist/ served by Nginx
 ```
 
 No linter or test suite.
 
 ## Navigation
 
-Pure state — no React Router. `App.jsx` holds a single `nav` object:
+Pure state — no React Router. `App.jsx` holds a **history stack**:
 
 ```js
-{ view: 'landing' | 'library' | 'author' | 'saga' | 'book' | 'search',
-  authorId, sagaId, bookId, query }
+const [history, setHistory] = useState([{ view: 'landing' }])
+const nav = history[history.length - 1]          // current view = top of stack
 ```
 
-`navigate(newNav)` replaces it. Always pass explicit `authorId`/`bookId` — there is no wrapping navigate that fills them in automatically (it was removed to allow cross-book navigation).
+- `nav` shape: `{ view: 'landing'|'library'|'saga'|'book'|'search', sagaId, bookId, tab, query }`
+  (there is **no** `author` view/layer — library shows sagas + standalone books directly).
+- `navigate(newNav)` → **push** onto the stack. Always pass explicit `sagaId`/`bookId`.
+- `goBack()` → **pop** → returns to the EXACT previous point (its `sagaId`/`bookId`/`tab`), not a fixed parent.
+- Every pushable view (library, saga, book, search) renders `AppHeader`, which owns the **Back** button (`canGoBack` prop). `landing` is the base of the stack (no header).
+- On back the previous view renders from the top; scroll position is **not** restored (by design).
+- `<main>` top padding is `calc(env(safe-area-inset-top) + 4rem)` so the fixed `AppHeader` never overlaps content in the iOS standalone PWA (the notch/status-bar area). Left/right/bottom safe-areas are padded too.
 
 ## Data model
 
 ```
-state.authors[]
-  ├── id, name, description
-  ├── sagas[]   { id, name, description }
-  └── books[]   { id, sagaId|null, title, description, startDate, endDate,
-                  characters[], places[], things[], words[] }
-                  └── elements: { id, name|word, age?, description }
+Saga  (author: free-text CharField, name, description)
+  └── Book (saga FK | null, author: free-text, title, description, startDate, endDate)
+        ├── characters[]  { id, name, age?, description }
+        ├── places[]      { id, name, description }
+        ├── things[]      { id, name, description }
+        └── words[]       { id, word, description }
 ```
 
-All mutations via `dispatch()` in `AppContext.jsx`. Actions: `ADD/UPDATE/DELETE_AUTHOR`, `ADD/UPDATE/DELETE_SAGA`, `ADD/UPDATE/DELETE_BOOK`, `ADD/UPDATE/DELETE_ELEMENT`, `APPEND_TO_DESCRIPTION`.
+- `author` is **free text** on Saga/Book, not a separate entity.
+- Book with `saga = null` = standalone book.
+- `AppContext.state` shape for @mention autocomplete: `{ sagas: [], books: [] }`.
+- All mutations via `dispatch()` in `AppContext.jsx` (calls the API, then refreshes mention-entities). Actions: `ADD/UPDATE/DELETE_SAGA`, `ADD/UPDATE/DELETE_BOOK`, `ADD/UPDATE/DELETE_ELEMENT`, `APPEND_TO_DESCRIPTION`.
 
 ## Key components
 
 ### MentionTextarea (`src/components/ui/MentionTextarea.jsx`)
 Replaces every `<textarea>` for description fields across the entire app. Shows a `@mention` autocomplete dropdown (rendered via `createPortal` into `document.body` with `position:fixed` to avoid modal clipping). Props:
-- `state` — full app state, used to build the global entity list (authors, sagas, books, characters, places, things, words)
-- `scope` — `{ bookId, authorId }` — sorts suggestions: same book first, then same author, then others
+- `state` — full app state, used to build the global entity list (sagas, books, characters, places, things, words)
+- `scope` — `{ bookId }` — sorts suggestions: same book first, then others
 
 ### DescriptionText (`src/components/ui/DescriptionText.jsx`)
-Renders description text with `@mentions` as clickable colored chips. Accepts `state` (global lookup) or `book` (local lookup). Entity objects returned to `onMentionClick` include `{ type, id, label, authorId, bookId? }` for navigation.
+Renders description text with `@mentions` as clickable colored chips. Accepts `state` (global lookup) or `book` (local lookup). Entity objects returned to `onMentionClick` include `{ type, id, label, bookId? }` for navigation.
 
 ### ElementList (`src/components/ElementList.jsx`)
 Single generic component for all four element types. `elementType: 'character'|'place'|'thing'|'word'`. Config driven by `CONFIGS` map. Includes:
-- **RelatedModal** — shows bidirectional `@mention` relationships in two tabs ("Menciona" / "Mencionado en")
-- **entityNav(entity, fallbackBookId, fallbackAuthorId)** — helper that builds the correct `navigate()` payload for any entity type (author → author view, saga → saga view, book → book view, element → book view with tab + highlight)
+- **RelatedModal** — shows bidirectional `@mention` relationships in two tabs ("Mentions" / "Mentioned in")
+- **entityNav(entity, fallbackBookId)** — helper that builds the correct `navigate()` payload for any entity type (saga → saga view, book → book view, element → book view with tab + highlight)
 
 ### Modal (`src/components/ui/Modal.jsx`)
-Bottom-sheet, `z-50`. Locks `document.body.overflow`. The MentionTextarea dropdown uses `z-9999` via portal to appear above it.
+Top-sheet via `createPortal` to `document.body`, `position:fixed`, follows `window.visualViewport` to survive the iOS keyboard.
+- **iOS scroll-lock:** on open it freezes the body with `position:fixed; top:-scrollY` (plain `overflow:hidden` is NOT enough on iOS Safari — the keyboard scrolls the background and it stays down); on close it restores the exact scroll position without animation. This fixes the "screen stays scrolled down" bug on iPhone.
+- **Always-present ✕ close button** (top-right of the sheet) so no modal can trap the user — the full-height sheet covers the backdrop, so tapping outside doesn't close it. The element-detail (`view`) and `RelatedModal` had no close button before and trapped users.
+- The MentionTextarea dropdown uses `z-9999` via portal to appear above it.
+
+## Backup + warning
+
+- Daily root cron (07:00 UTC) → `/usr/local/bin/azul-backup.sh` commits `db.sqlite3` and pushes over the **explicit SSH deploy-key URL** (`git@github-azul:FNYRD/azul.git`), never `origin` (deploys reset `origin` to a dead-token HTTPS URL). Writes `/var/lib/azul/backup-status.json`, served by Nginx at `/backup-status.json`.
+- `BackupWarning` (in `App.jsx`) fetches that status on load; if the last success is >2 days old / missing / `ok:false` it shows a dismissible red banner ("Avisar a Jesús…") and, when stale, POSTs `/api/backup/run/` (`BackupTriggerView`) to re-fire the backup.
 
 ## @mention system
 
-- **Autocomplete**: `MentionTextarea` detects `@` while typing, filters all entities globally, inserts `@Name ` on selection. MENTION_RE supports multi-word names with spaces.
-- **Duplicate names**: If two entities share the same name, both appear in the dropdown with a sub-label `bookTitle · authorName`. On selection, the qualifier `@Name (BookTitle)` is inserted so the reference is unambiguous.
+- **Autocomplete**: `MentionTextarea` detects `@` while typing, filters all entities globally, inserts `@Name ` on selection. Supports multi-word names with spaces.
+- **Duplicate names**: If two entities share the same name, both appear in the dropdown with a differentiating sub-label. On selection, the qualifier `@Name (BookTitle)` is inserted so the reference is unambiguous.
 - **Display**: `DescriptionText` resolves `@Name` or `@Name (BookTitle)` against the global entity map using a greedy longest-first parser (sorted by name length descending). Renders clickable chips with type-color coding.
-- **Colors**: author=rose, saga=violet, book=orange, character=purple, place=amber, thing=emerald, word=sky.
+- **Colors**: saga=violet, book=orange, character=purple, place=amber, thing=emerald, word=sky.
 - **Chip click navigation**: All views that show `DescriptionText` must pass `onMentionClick` — if omitted, chips render but are not clickable.
 
 ## Uniqueness validation
 
 Every create/edit modal validates uniqueness before dispatching:
-- **Authors** (`LibraryView`): case-insensitive name match across all authors
-- **Sagas** (`AuthorView`): case-insensitive name match within same author
-- **Books** (`AuthorView`, `SagaView`): case-insensitive title match within same author
+- **Sagas** (`LibraryView`): case-insensitive name match across all sagas
+- **Books** (`LibraryView`, `SagaView`): case-insensitive title match
 - **Elements** (`ElementList`): case-insensitive name/word match within same book + same element type
 
 On conflict a red error message appears below the input field; the modal stays open and nothing is dispatched.
 
 ## Test plan
 
-Tests live in `test.md` at the project root. Format: 6 sections (App general, Autores, Sagas y libros, Elementos, @mentions, Búsqueda global). Status per row: ✅ pasado | ❌ fallido | 🔄 en progreso | ⬜ pendiente.
-
-**Last completed test: 6.5**. All sections complete ✅.
-
-Known pending fixes before reaching those tests:
-- Test 5.1: `MENTION_RE` regression — `*` was changed to `+`, so typing bare `@` no longer opens the dropdown. Fix before running section 5.
-- Test 5.11: "Añadir notas" must append with a blank line + `---` separator. Not yet implemented.
+Tests live in `test.md` at `azul-app/`. Format sections: App general, Sagas y libros, Elementos, @mentions, Búsqueda global. Status per row: ✅ pasado | ❌ fallido | 🔄 en progreso | ⬜ pendiente. (Note: the old "Autores" section is obsolete — the author layer was removed; author is now free text.)
 
 ## "Añadir notas" separator requirement
 
-`APPEND_TO_DESCRIPTION` action (and the submit handlers in AuthorView/SagaView/BookView) must concatenate the new text after a blank line and a `---` divider:
+`APPEND_TO_DESCRIPTION` action must concatenate the new text after a blank line and a `---` divider:
 ```
 <existing text>
 

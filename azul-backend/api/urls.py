@@ -41,3 +41,5 @@ urlpatterns = [
     path("mention-entities/",           views.MentionEntitiesView.as_view()),
     path("search/",                     views.SearchView.as_view()),
 ]
+
+urlpatterns += [path("backup/run/", views.BackupTriggerView.as_view())]
