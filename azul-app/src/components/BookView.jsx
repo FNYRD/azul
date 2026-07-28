@@ -21,7 +21,7 @@ const TAB_ELEMENT_TYPE = {
   words:      "word",
 }
 
-export default function BookView({ bookId, sagaId, initialTab, navigate }) {
+export default function BookView({ bookId, sagaId, initialTab, highlightId, navigate }) {
   const { state, dispatch } = useApp()
 
   const [book, setBook]         = useState(null)
@@ -121,6 +121,7 @@ export default function BookView({ bookId, sagaId, initialTab, navigate }) {
         book={book}
         navigate={navigate}
         onRefresh={refresh}
+        highlightId={highlightId}
       />
 
       <Modal isOpen={modal === "edit"} onClose={() => setModal(null)}>

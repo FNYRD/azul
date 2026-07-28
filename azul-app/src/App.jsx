@@ -87,7 +87,7 @@ function AppContent() {
       <main className="pb-12 w-full max-w-lg mx-auto px-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 4rem)", paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))", paddingBottom: "max(3rem, env(safe-area-inset-bottom))" }}>
         {nav.view === "library" && <LibraryView navigate={navigate} />}
         {nav.view === "saga"    && <SagaView    sagaId={nav.sagaId} navigate={navigate} />}
-        {nav.view === "book"    && <BookView    bookId={nav.bookId} sagaId={nav.sagaId} initialTab={nav.tab} navigate={navigate} />}
+        {nav.view === "book"    && <BookView    bookId={nav.bookId} sagaId={nav.sagaId} initialTab={nav.tab} highlightId={nav.highlightId} navigate={navigate} />}
         {nav.view === "search"  && <SearchView  key={searchKey} query={nav.query} navigate={navigate} />}
       </main>
     </div>

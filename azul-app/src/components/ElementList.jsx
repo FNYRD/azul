@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import Modal from './ui/Modal'
 import ConfirmModal from './ui/ConfirmModal'
@@ -59,7 +59,19 @@ const CONFIGS = {
   },
 }
 
-export default function ElementList({ elementType, book, navigate, onRefresh }) {
+function apiError(err) {
+  const d = err && err.data
+  if (!d) return ''
+  if (typeof d === 'string') return d
+  const nf = d.nonFieldErrors || d.non_field_errors || d.detail
+  if (Array.isArray(nf)) return nf[0]
+  if (typeof nf === 'string') return nf
+  const first = Object.values(d)[0]
+  if (Array.isArray(first)) return first[0]
+  return typeof first === 'string' ? first : ''
+}
+
+export default function ElementList({ elementType, book, navigate, onRefresh, highlightId }) {
   const { dispatch, state } = useApp()
   const config = CONFIGS[elementType]
   const elements = book[elementType === 'character' ? 'characters' : elementType === 'place' ? 'places' : elementType === 'thing' ? 'things' : 'words'] || []
@@ -69,6 +81,7 @@ export default function ElementList({ elementType, book, navigate, onRefresh }) 
   const [formError, setFormError]  = useState('')
   const [appendModal, setAppend]   = useState(null) // element id
   const [appendText, setAppendTx]  = useState('')
+  const [appendError, setAppendError] = useState('')
   const [filter, setFilter]        = useState({})
   const [showFilter, setShowFilter] = useState(false)
   const [relatedModal, setRelatedModal] = useState(null) // element
@@ -104,13 +117,17 @@ export default function ElementList({ elementType, book, navigate, onRefresh }) 
     if (duplicate) { setFormError(`A ${config.label.toLowerCase()} with that name already exists`); return }
     const data = {}
     config.fields.forEach(f => { data[f.key] = (form[f.key] || '').trim() })
-    if (modal === 'add') {
-      await dispatch({ type: 'ADD_ELEMENT', bookId: book.id, elementType, data })
-    } else {
-      await dispatch({ type: 'UPDATE_ELEMENT', bookId: book.id, elementType, elementId: modal.el.id, updates: data })
+    try {
+      if (modal === 'add') {
+        await dispatch({ type: 'ADD_ELEMENT', bookId: book.id, elementType, data })
+      } else {
+        await dispatch({ type: 'UPDATE_ELEMENT', bookId: book.id, elementType, elementId: modal.el.id, updates: data })
+      }
+      setModal(null)
+      onRefresh?.()
+    } catch (err) {
+      setFormError(apiError(err) || 'Could not save. Please try again.')
     }
-    setModal(null)
-    onRefresh?.()
   }
 
   function deleteEl(id) {
@@ -127,11 +144,15 @@ export default function ElementList({ elementType, book, navigate, onRefresh }) 
   async function submitAppend(e) {
     e.preventDefault()
     if (!appendText.trim()) return
-    await dispatch({ type: 'APPEND_TO_DESCRIPTION', target: 'element', bookId: book.id, elementType, elementId: appendModal, text: appendText.trim() })
-    setAppendTx('')
-    setAppend(null)
-    setModal(null)
-    onRefresh?.()
+    try {
+      await dispatch({ type: 'APPEND_TO_DESCRIPTION', target: 'element', bookId: book.id, elementType, elementId: appendModal, text: appendText.trim() })
+      setAppendTx('')
+      setAppend(null)
+      setModal(null)
+      onRefresh?.()
+    } catch (err) {
+      setAppendError(apiError(err) || 'Could not add text. Please try again.')
+    }
   }
 
   const typeColors = {
@@ -141,6 +162,12 @@ export default function ElementList({ elementType, book, navigate, onRefresh }) 
     word:      'border-l-sky-400',
   }
   const borderColor = typeColors[elementType]
+  const highlightRef = useRef(null)
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }, [highlightId, filtered])
 
   return (
     <div className="space-y-3">
@@ -208,10 +235,12 @@ export default function ElementList({ elementType, book, navigate, onRefresh }) 
       {/* Element cards */}
       {filtered.map(el => {
         const displayName = el[config.nameKey]
+        const isHi = highlightId && el.id === highlightId
         return (
           <div
             key={el.id}
-            className={`card border-l-4 ${borderColor} cursor-pointer`}
+            ref={isHi ? highlightRef : null}
+            className={`card border-l-4 ${borderColor} cursor-pointer ${isHi ? 'ring-2 ring-teal-dark' : ''}`}
             onClick={() => openView(el)}
           >
             <div className="p-4">
@@ -268,7 +297,7 @@ export default function ElementList({ elementType, book, navigate, onRefresh }) 
                   Related
                 </button>
                 <div className="flex gap-2">
-                  <button onClick={() => { setModal(null); setAppend(freshEl.id); setAppendTx('') }} className="btn-secondary flex-1 text-sm py-2.5">
+                  <button onClick={() => { setModal(null); setAppend(freshEl.id); setAppendTx(''); setAppendError('') }} className="btn-secondary flex-1 text-sm py-2.5">
                     + Add text
                   </button>
                   <button onClick={() => { setModal(null); openEdit(freshEl) }} className="btn-primary flex-1 text-sm py-2.5">
@@ -347,6 +376,7 @@ export default function ElementList({ elementType, book, navigate, onRefresh }) 
             state={state}
             scope={{ bookId: book.id }}
           />
+          {appendError && <p className="text-red-500 text-xs font-sans">{appendError}</p>}
           <p className="text-xs font-sans text-ink-muted">The text will be appended to the existing description.</p>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={() => setAppend(null)} className="btn-secondary flex-1">Cancel</button>

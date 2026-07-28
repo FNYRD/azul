@@ -70,8 +70,9 @@ export default function DescriptionText({ text, book, state, onMentionClick }) {
             parts.push({ type: "text", content: "@" + afterAt.slice(0, fullLen) })
             i += 1 + fullLen
           } else {
-            parts.push({ type: "mention", raw: "@" + afterAt.slice(0, matchedName.length), word: matchedName, entity: entityMap[matchedName] })
-            i += 1 + matchedName.length
+            const fullLen = matchedName.length + qualifierMatch[0].length
+            parts.push({ type: "mention", raw: "@" + afterAt.slice(0, fullLen), word: matchedName, entity: entityMap[qualifiedKey] })
+            i += 1 + fullLen
           }
         } else {
           parts.push({ type: "mention", raw: "@" + afterAt.slice(0, matchedName.length), word: matchedName, entity: entityMap[matchedName] })

@@ -6,6 +6,18 @@ import ConfirmModal from "./ui/ConfirmModal"
 import MentionTextarea from "./ui/MentionTextarea"
 import { BookOpenIcon, BookmarkIcon, CalendarIcon } from "./ui/Icons"
 
+function apiError(err) {
+  const d = err && err.data
+  if (!d) return ''
+  if (typeof d === 'string') return d
+  const nf = d.nonFieldErrors || d.non_field_errors || d.detail
+  if (Array.isArray(nf)) return nf[0]
+  if (typeof nf === 'string') return nf
+  const first = Object.values(d)[0]
+  if (Array.isArray(first)) return first[0]
+  return typeof first === 'string' ? first : ''
+}
+
 export default function LibraryView({ navigate }) {
   const { state, dispatch, ensureMentions } = useApp()
 
@@ -31,12 +43,22 @@ export default function LibraryView({ navigate }) {
   async function submitSaga(e) {
     e.preventDefault()
     if (!form.name.trim()) return
-    if (modal === "add-saga") {
-      await dispatch({ type: "ADD_SAGA", name: form.name.trim(), author: form.author.trim(), description: form.description.trim() })
-    } else {
-      await dispatch({ type: "UPDATE_SAGA", sagaId: modal.saga.id, updates: { name: form.name.trim(), author: form.author.trim(), description: form.description.trim() } })
+    const trimmed = form.name.trim()
+    const dup = (library.sagas || []).some(
+      s => s.name.toLowerCase() === trimmed.toLowerCase() &&
+           (modal === "add-saga" || s.id !== modal.saga.id)
+    )
+    if (dup) { setFormError("A saga with that name already exists"); return }
+    try {
+      if (modal === "add-saga") {
+        await dispatch({ type: "ADD_SAGA", name: trimmed, author: form.author.trim(), description: form.description.trim() })
+      } else {
+        await dispatch({ type: "UPDATE_SAGA", sagaId: modal.saga.id, updates: { name: trimmed, author: form.author.trim(), description: form.description.trim() } })
+      }
+      setModal(null); refresh()
+    } catch (err) {
+      setFormError(apiError(err) || "Could not save. Please try again.")
     }
-    setModal(null); refresh()
   }
 
   function openAddBook(sagaId = null) { setForm({ title: "", author: "", description: "", startDate: "", endDate: "", sagaId }); setFormError(""); setModal("add-book") }
@@ -45,12 +67,26 @@ export default function LibraryView({ navigate }) {
   async function submitBook(e) {
     e.preventDefault()
     if (!form.title.trim()) return
-    if (modal === "add-book") {
-      await dispatch({ type: "ADD_BOOK", sagaId: form.sagaId || null, title: form.title.trim(), author: form.author.trim(), description: form.description.trim(), startDate: form.startDate || null, endDate: form.endDate || null })
-    } else {
-      await dispatch({ type: "UPDATE_BOOK", bookId: modal.book.id, updates: { title: form.title.trim(), author: form.author.trim(), description: form.description.trim(), startDate: form.startDate || null, endDate: form.endDate || null } })
+    const trimmed = form.title.trim()
+    const allBooks = [
+      ...(library.sagas || []).flatMap(s => s.books || []),
+      ...(library.standaloneBooks || []),
+    ]
+    const dup = allBooks.some(
+      b => b.title.toLowerCase() === trimmed.toLowerCase() &&
+           (modal === "add-book" || b.id !== modal.book.id)
+    )
+    if (dup) { setFormError("A book with that title already exists"); return }
+    try {
+      if (modal === "add-book") {
+        await dispatch({ type: "ADD_BOOK", sagaId: form.sagaId || null, title: trimmed, author: form.author.trim(), description: form.description.trim(), startDate: form.startDate || null, endDate: form.endDate || null })
+      } else {
+        await dispatch({ type: "UPDATE_BOOK", bookId: modal.book.id, updates: { title: trimmed, author: form.author.trim(), description: form.description.trim(), startDate: form.startDate || null, endDate: form.endDate || null } })
+      }
+      setModal(null); refresh()
+    } catch (err) {
+      setFormError(apiError(err) || "Could not save. Please try again.")
     }
-    setModal(null); refresh()
   }
 
   function deleteBook(bookId) {

@@ -45,6 +45,7 @@ Saga  (author: free-text CharField, name, description)
 ```
 
 - `author` is **free text** on Saga/Book, not a separate entity.
+- `Character` also has `created_at` (`auto_now_add`). Models `Creature` and `Fact` exist in the DB/migrations (each FK to `Book`) but have **no frontend UI** yet — see `Fixes (2026-07-28)`.
 - Book with `saga = null` = standalone book.
 - `AppContext.state` shape for @mention autocomplete: `{ sagas: [], books: [] }`.
 - All mutations via `dispatch()` in `AppContext.jsx` (calls the API, then refreshes mention-entities). Actions: `ADD/UPDATE/DELETE_SAGA`, `ADD/UPDATE/DELETE_BOOK`, `ADD/UPDATE/DELETE_ELEMENT`, `APPEND_TO_DESCRIPTION`.
@@ -126,3 +127,14 @@ All hand-written SVGs in `src/components/ui/Icons.jsx`. No icon library. Monochr
 ## Fonts (loaded in `index.html`)
 
 `Pinyon Script` (landing title — uses inline `style`, not Tailwind class, to avoid purge issues), `Playfair Display` (headings), `Crimson Text` (body), `Inter` (UI sans).
+
+
+## Fixes (2026-07-28)
+
+- **Bug crítico (crash 500 al añadir personajes).** `api/models.py` estaba desactualizado respecto a las migraciones: le faltaban `Character.created_at` (añadido en `0003` como columna `NOT NULL` sin default) y los modelos `Creature`/`Fact` (`0004`/`0005`, ambos FK a `Book`, con datos en la BD). Al insertar un `Character` el ORM no seteaba `created_at` → `IntegrityError: NOT NULL constraint failed: api_character.created_at`. **Fix:** restaurados en `models.py` el campo + los dos modelos para que coincidan con la BD. Sin migración destructiva, cero pérdida de datos.
+- **`LibraryView`**: create de saga/libro no validaba duplicados ni capturaba errores → el `400` del backend quedaba como promesa rechazada sin feedback y con el modal atascado. Añadido check case-insensitive + `try/catch` que muestra el error (helper `apiError`, parsea `nonFieldErrors`).
+- **`ElementList`**: `try/catch` en submit/append (mismo `apiError`) para no fallar en silencio.
+- **`highlightId`**: ahora se pasa `App.jsx → BookView → ElementList`. El elemento destino de una navegación (Related / búsqueda / mención cross-book) se resalta (`ring-2 ring-teal-dark`) y hace `scrollIntoView`. Antes la plomería `highlightId` era código muerto.
+- **`DescriptionText`**: una mención con qualifier (`@Nombre (Libro)`) ahora resuelve a `entityMap[qualifiedKey]` (la entidad homónima correcta) y el chip muestra el texto completo, en vez de enlazar a la primera homónima y dejar `(Libro)` como texto suelto.
+
+**Drift restante (cosmético, no rompe runtime):** `makemigrations` aún pide `AlterModelOptions` de `ordering` en character/book/saga + `AlterField` de `fact.created_at`. Generar y commitear ese `0006` (no destructivo) **desde un clon del repo**, nunca creando el archivo de migración directo en el checkout del server (se borraría en el deploy y dejaría la BD referenciando una migración inexistente → rompería `migrate`).

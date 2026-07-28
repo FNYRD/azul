@@ -6,6 +6,8 @@
 > ⚠️ **Actualización:** la capa "Autores" fue eliminada (author es ahora texto libre en Saga/Book),
 > así que la **sección 2 (Autores) está obsoleta**. La navegación usa una **pila de historial**
 > (`App.jsx`): `goBack()` vuelve al punto EXACTO anterior, no a un padre fijo.
+>
+> 🛠 **2026-07-28:** detectado y corregido un **crash 500 al añadir personajes** (`Character.created_at` faltaba en el modelo; ver `CLAUDE.md` → Fixes). Re-testeado end-to-end vía Chrome DevTools MCP (crear saga/libro/personaje/lugar/palabra, búsqueda, @mentions + autocomplete, Related, navegación con highlight). Además corregidos: validación de duplicados en biblioteca, resaltado por `highlightId`, y el chip de menciones con qualifier.
 
 ## Nota de diseño
 
